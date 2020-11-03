@@ -1,0 +1,23 @@
+[package]
+name = 'extended_story'
+version = '0.1.0'
+authors = ['progre <djyayutto@gmail.com>']
+edition = '2018'
+
+[lib]
+crate-type = ['dylib']
+
+[dependencies]
+encoding_rs = '0.8'
+regex = '1'
+
+[dependencies.winapi]
+version = '0.3'
+features = [
+    'd3d9',
+    'debugapi',
+    'handleapi',
+    'memoryapi',
+    'processthreadsapi',
+    'tlhelp32',
+]
