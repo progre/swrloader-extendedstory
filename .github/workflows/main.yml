@@ -33,9 +33,6 @@ jobs:
           command: build
           args: --release
 
-      - run: |
-          zip --junk-paths extendedstory target/i686-pc-windows-msvc/release/extendedstory.dll
-      - uses: actions/upload-artifact@v1
+      - uses: TheDoctor0/zip-release@0.4
         with:
-          name: build-i686-pc-windows-msvc
-          path: extendedstory.zip
+          path: target/i686-pc-windows-msvc/release/extendedstory.dll
