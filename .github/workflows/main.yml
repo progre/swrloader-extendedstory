@@ -40,16 +40,18 @@ jobs:
           7z a -tzip release.zip ExtendedStory.dll
       - uses: actions/upload-artifact@v2
         with:
-          path: ./ExtendedStory.dll
+          path: ./release.zip
           name: artifact
 
   release:
     needs: build
 #     if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v2
         name: artifact
+      - run: |
+          ls -all
       - id: create_release
         uses: actions/create-release@v1
         env:
