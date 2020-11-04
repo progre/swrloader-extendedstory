@@ -1,10 +1,10 @@
 name: CI
 on:
   push:
-    branches: [ main, ci ]
-    tags: ['v*']
+    branches: [main]
+    tags: [v*]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 jobs:
   build:
     runs-on: windows-latest
@@ -46,7 +46,7 @@ jobs:
 
   release:
     needs: build
-#     if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v2
