@@ -36,12 +36,13 @@ jobs:
 
       - shell: bash
         run: |
-          mv target/i686-pc-windows-msvc/release/extended_story.dll ./ExtendedStory.dll
-          7z a -tzip release.zip ExtendedStory.dll
+          mkdir artifact
+          mv target/i686-pc-windows-msvc/release/extended_story.dll \
+            ./artifact/ExtendedStory.dll
       - uses: actions/upload-artifact@v2
         with:
-          path: ./release.zip
           name: artifact
+          path: ./artifact
 
   release:
     needs: build
@@ -51,7 +52,7 @@ jobs:
       - uses: actions/download-artifact@v2
         name: artifact
       - run: |
-          ls -all
+          zip --junk-paths release ./artifact/
       - id: create_release
         uses: actions/create-release@v1
         env:
@@ -64,6 +65,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./artifact/release.zip
-          asset_name: release.zip
+          asset_path: ./release.zip
+          asset_name: ${{ github.event.repository.name }}.zip
           asset_content_type: application/zip
