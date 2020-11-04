@@ -33,6 +33,6 @@ jobs:
           command: build
           args: --release
 
-      - uses: TheDoctor0/zip-release@0.4.1
+      - uses: edgarrc/action-7z@v1.0.4
         with:
-          path: target/i686-pc-windows-msvc/release/extendedstory.dll
+          args: 7z a -t7z -mx=9 release.7z ./target/i686-pc-windows-msvc/release/extendedstory.dll
