@@ -73,7 +73,6 @@ Action:left,152
 
 Label:Start
 PlayBgm:data/bgm/st{:>02}.ogg
-Action:left,2
 
 Sleep:60;
 Action:right,101
