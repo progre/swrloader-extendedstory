@@ -1,4 +1,4 @@
-use crate::select_scenario;
+use crate::select_scenarios::select_scenario;
 use crate::swr::*;
 use winapi::shared::minwindef::DWORD;
 use winapi::shared::minwindef::HMODULE;
@@ -21,13 +21,4 @@ pub fn hook(_module: HMODULE) {
 
         FlushInstructionCache(GetCurrentProcess(), NULL, 0);
     }
-}
-
-#[cfg(test)]
-mod tests {
-    use std::ffi::CString;
-    use winapi::um::debugapi::OutputDebugStringW;
-
-    #[test]
-    fn it_works() {}
 }

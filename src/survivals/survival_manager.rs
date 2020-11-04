@@ -8,8 +8,7 @@ use encoding_rs::SHIFT_JIS;
 use regex::Regex;
 use std::ffi::CStr;
 use std::os::raw::c_char;
-use std::thread::sleep;
-use std::time::Duration;
+use std::os::raw::c_void;
 use winapi::shared::minwindef::BOOL;
 use winapi::shared::minwindef::DWORD;
 use winapi::shared::minwindef::LPVOID;
@@ -37,8 +36,18 @@ unsafe fn load_csv(obj: LPVOID, file_name: *const c_char) -> BOOL {
     )(obj, file_name)
 }
 
-unsafe fn new_text_object(text_size: DWORD) -> LPVOID {
-    union_cast!(extern "cdecl" fn(text_size: DWORD) -> LPVOID)(0x00664F9A)(text_size)
+unsafe fn new_text_object(text_size: DWORD) -> *mut c_void {
+    union_cast!(extern "cdecl" fn(text_size: DWORD) -> *mut c_void)(0x00664F9A)(text_size)
+}
+
+unsafe fn create_text_object(text: &str) -> *const c_void {
+    let text_array = SHIFT_JIS.encode(&text).0;
+    // 謎構造体をnewして、先頭にテキストデータをセット
+    let csv_obj = new_text_object(text_array.len() as DWORD);
+    for i in 0..text_array.len() {
+        *((csv_obj as u32 + i as u32) as *mut c_char) = text_array[i] as i8;
+    }
+    csv_obj
 }
 
 extern "fastcall" fn on_load_txt(obj: LPVOID, file_name: *const c_char) -> BOOL {
@@ -50,14 +59,8 @@ extern "fastcall" fn on_load_txt(obj: LPVOID, file_name: *const c_char) -> BOOL 
     match re.captures(&file_name_str) {
         Some(cap) => {
             let csv = build_scenario_txt(&cap[1], cap[2].parse().unwrap());
-            let csv_array = SHIFT_JIS.encode(&csv).0;
             unsafe {
-                // 謎構造体をnewして、先頭にcsvデータをセット
-                let csv_obj = new_text_object(csv.len() as DWORD);
-                for i in 0..csv_array.len() {
-                    *((csv_obj as u32 + i as u32) as *mut c_char) = csv_array[i] as i8;
-                }
-                *(obj as *mut DWORD) = csv_obj as DWORD;
+                *(obj as *mut u32) = create_text_object(&csv) as u32;
             }
             return TRUE;
         }
@@ -67,14 +70,8 @@ extern "fastcall" fn on_load_txt(obj: LPVOID, file_name: *const c_char) -> BOOL 
     match re.captures(&file_name_str) {
         Some(_) => {
             let csv = build_ending_txt();
-            let csv_array = SHIFT_JIS.encode(&csv).0;
             unsafe {
-                // 謎構造体をnewして、先頭にcsvデータをセット
-                let csv_obj = new_text_object(csv.len() as DWORD);
-                for i in 0..csv_array.len() {
-                    *((csv_obj as u32 + i as u32) as *mut c_char) = csv_array[i] as i8;
-                }
-                *(obj as *mut DWORD) = csv_obj as DWORD;
+                *(obj as *mut u32) = create_text_object(&csv) as u32;
             }
             return TRUE;
         }
@@ -92,26 +89,13 @@ extern "fastcall" fn on_load_csv(obj: LPVOID, file_name: *const c_char) -> BOOL 
     let re = Regex::new(r"data/csv/.+/story.csv").unwrap();
     if re.is_match(&file_name_str) {
         let csv = build_story_csv();
-        d(&csv);
-        let csv_array = SHIFT_JIS.encode(&csv).0;
         unsafe {
-            // 謎構造体をnewして、先頭にcsvデータをセット
-            let csv_obj = new_text_object(csv.len() as DWORD);
-            for i in 0..csv_array.len() {
-                *((csv_obj as u32 + i as u32) as *mut c_char) = csv_array[i] as i8;
-            }
-            *(obj as *mut DWORD) = csv_obj as DWORD;
+            *(obj as *mut u32) = create_text_object(&csv) as u32;
         }
         return TRUE;
     }
 
-    let result = unsafe { load_csv(obj, file_name) };
-    if 1 == 0 {
-        let cstr = unsafe { CStr::from_ptr(*(obj as *const *const i8)) };
-        let file_name_str = SHIFT_JIS.decode(cstr.to_bytes()).0;
-        d(&format!("raw csv: {}", file_name_str));
-    }
-    result
+    unsafe { load_csv(obj, file_name) }
 }
 
 pub struct SurvivalManager {

@@ -2,7 +2,7 @@
 
 mod debug;
 mod hook;
-mod select_scenario;
+mod select_scenarios;
 mod survivals;
 mod swr;
 
@@ -13,7 +13,7 @@ use winapi::shared::minwindef::TRUE;
 use winapi::um::winnt::DLL_PROCESS_ATTACH;
 
 #[no_mangle]
-pub unsafe extern "system" fn DllMain(module: HMODULE, reason: u32, _: u32) -> BOOL {
+pub extern "system" fn DllMain(module: HMODULE, reason: u32, _: u32) -> BOOL {
     return if reason == DLL_PROCESS_ATTACH {
         hook(module);
         TRUE
