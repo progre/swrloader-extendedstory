@@ -9,6 +9,20 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
+
+      - uses: actions/cache@v1
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions/cache@v1
+        with:
+          path: ~/.cargo/git
+          key: cargo-index-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions/cache@v1
+        with:
+          path: target
+          key: cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
@@ -17,5 +31,11 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --release --target=i686-pc-windows-msvc
-          use-cross: true
+          args: --release
+
+      - run: |
+          zip --junk-paths extendedstory target/i686-pc-windows-msvc/release/extendedstory.dll
+      - uses: actions/upload-artifact@v1
+        with:
+          name: build-i686-pc-windows-msvc
+          path: extendedstory.zip
