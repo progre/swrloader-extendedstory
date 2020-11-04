@@ -37,3 +37,7 @@ jobs:
         run: |
           mv target/i686-pc-windows-msvc/release/extended_story.dll ./ExtendedStory.dll
           7z a -tzip release.zip ExtendedStory.dll
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: release.zip
