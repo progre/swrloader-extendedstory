@@ -32,3 +32,8 @@ jobs:
         with:
           command: build
           args: --release
+
+      - shell: bash
+        run: |
+          mv target/i686-pc-windows-msvc/release/extended_story.dll ./ExtendedStory.dll
+          7z a -tzip release.zip ExtendedStory.dll
