@@ -22,7 +22,19 @@ use winapi::um::winnt::PAGE_EXECUTE_WRITECOPY;
 pub static mut SURVIVAL_MANAGER: SurvivalManager = SurvivalManager {
     original_load_txt: 0,
     original_load_csv: 0,
+    original_save_clear_operator: 0u8,
+    original_save_result_operators: None,
 };
+
+unsafe fn tamper_bytes(addr: u32, data: &[u8]) -> Vec<u8> {
+    let mut old = Vec::new();
+    for i in 0..data.len() {
+        let ptr = (addr + i as u32) as *mut u8;
+        old.push(*ptr);
+        *ptr = data[i];
+    }
+    old
+}
 
 unsafe fn load_txt(obj: LPVOID, file_name: *const c_char) -> BOOL {
     union_cast!(extern "fastcall" fn(obj: LPVOID, file_name: *const c_char) -> BOOL)(
@@ -101,6 +113,8 @@ extern "fastcall" fn on_load_csv(obj: LPVOID, file_name: *const c_char) -> BOOL 
 pub struct SurvivalManager {
     original_load_txt: u32,
     original_load_csv: u32,
+    original_save_clear_operator: u8,
+    original_save_result_operators: Option<Vec<u8>>,
 }
 
 impl SurvivalManager {
@@ -114,6 +128,9 @@ impl SurvivalManager {
             VirtualProtect(text_Offset, text_Size, PAGE_EXECUTE_WRITECOPY, &mut old);
             self.original_load_txt = TamperNearJmpOpr(0x4059F3, on_load_txt as DWORD);
             self.original_load_csv = TamperNearJmpOpr(0x40EB63, on_load_csv as DWORD);
+            self.original_save_clear_operator = tamper_bytes(0x42D62B, &[0xEBu8])[0];
+            self.original_save_result_operators =
+                Some(tamper_bytes(0x43EB5B, &0x9090909090u64.to_be_bytes()[3..8])); // リザルト保存を抑止
             VirtualProtect(text_Offset, text_Size, old, &mut old);
             FlushInstructionCache(GetCurrentProcess(), NULL, 0);
         }
@@ -125,11 +142,18 @@ impl SurvivalManager {
             VirtualProtect(text_Offset, text_Size, PAGE_EXECUTE_WRITECOPY, &mut old);
             TamperNearJmpOpr(0x4059F3, self.original_load_txt);
             TamperNearJmpOpr(0x40EB63, self.original_load_csv);
+            tamper_bytes(0x42D62B, &[self.original_save_clear_operator]);
+            tamper_bytes(
+                0x43EB5B,
+                self.original_save_result_operators.as_ref().unwrap(),
+            );
             VirtualProtect(text_Offset, text_Size, old, &mut old);
             FlushInstructionCache(GetCurrentProcess(), NULL, 0);
         }
         self.original_load_txt = 0;
         self.original_load_csv = 0;
+        self.original_save_clear_operator = 0;
+        self.original_save_result_operators = None;
     }
 }
 
@@ -138,5 +162,16 @@ impl Drop for SurvivalManager {
         if self.is_active() {
             self.restore();
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn bytes() {
+        assert_eq!(
+            &[0x01u8, 0x02u8, 0x03u8, 0x04u8, 0x05u8],
+            &0x0102030405u64.to_be_bytes()[3..8]
+        );
     }
 }
