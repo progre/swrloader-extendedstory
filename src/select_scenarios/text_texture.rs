@@ -95,13 +95,15 @@ pub struct TextTexture {
 
 impl TextTexture {
     fn new(width: u32, height: u32, text: &str, font: &SWRFont) -> Self {
-        let sjis = SHIFT_JIS.encode(&format!("{}\0", text)).0.as_ptr() as *const i8;
+        let zero_ended_string = format!("{}\0", text);
+        let sjis = SHIFT_JIS.encode(&zero_ended_string).0;
+        // as_ptr() 使用中に dropしないよう注意
         let mut tex_id = 0;
         unsafe {
             CTextureManager_CreateTextTexture(
                 g_textureMgr,
                 &mut tex_id,
-                sjis,
+                sjis.as_ptr() as *const i8,
                 font.as_ptr(),
                 width,
                 height,
