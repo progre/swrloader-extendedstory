@@ -17,10 +17,10 @@ use winapi::shared::ntdef::LPCSTR;
 // // ---------------- ここからテンプレ ----------------
 
 // DWORD書き換え
-pub unsafe fn TamperDword(addr: DWORD, target: DWORD) -> DWORD {
-    let old: DWORD = *(addr as *const DWORD);
-    *(addr as *mut DWORD) = target;
-    return old;
+pub unsafe fn TamperDword(addr: usize, target: usize) -> usize {
+    let old = *(addr as *const usize);
+    *(addr as *mut usize) = target;
+    old
 }
 
 // // DWORD加算
@@ -33,10 +33,10 @@ pub unsafe fn TamperDword(addr: DWORD, target: DWORD) -> DWORD {
 // }
 
 // NEAR JMPオペランド書き換え
-pub unsafe fn TamperNearJmpOpr(addr: DWORD, target: DWORD) -> DWORD {
-    let old: DWORD = (*((addr + 1) as *const i32) + (addr as i32 + 5)) as u32;
+pub unsafe fn TamperNearJmpOpr(addr: usize, target: usize) -> usize {
+    let old = (*((addr + 1) as *const i32) + (addr as i32 + 5)) as usize;
     *((addr + 1) as *mut i32) = ((target as i64) - (addr + 5) as i64) as i32;
-    return old;
+    old
 }
 
 // // NEAR JMP書き換え
@@ -118,11 +118,11 @@ macro_rules! union_cast {
     ($type: ty) => {{
         #[repr(C)]
         union TemporaryUnionType {
-            ptr: DWORD,
+            ptr: usize,
             pub call: $type,
         }
 
-        (|src: DWORD| -> $type {
+        (|src: usize| -> $type {
             let tmp = TemporaryUnionType { ptr: src };
             return tmp.call;
         })
@@ -318,42 +318,42 @@ pub const g_renderer: LPVOID = 0x6E3DBC as LPVOID;
 // #define __argv       (*(char***)0x6E798C)
 
 // 仮想関数テーブル
-pub const vtbl_CLogo: DWORD = 0x6AC6FC;
-pub const vtbl_Opening: DWORD = 0x6AC798;
-pub const vtbl_CLoading: DWORD = 0x6AC6AC;
-pub const vtbl_CTitle: DWORD = 0x6ACCF4;
-pub const vtbl_CSelect: DWORD = 0x6ACBCC;
-pub const vtbl_CSelectScenario: DWORD = 0x6ACC20;
-pub const vtbl_CBattle: DWORD = 0x6AC470;
-pub const vtbl_Ending: DWORD = 0x6AC5E8;
-pub const vtbl_CSelectSV: DWORD = 0x6AC4AC;
-pub const vtbl_CLoadingSV: DWORD = 0x6AC4CC;
-pub const vtbl_CBattleSV: DWORD = 0x6AC4E8;
-pub const vtbl_CSelectCL: DWORD = 0x6AC504;
-pub const vtbl_CLoadingCL: DWORD = 0x6AC524;
-pub const vtbl_CBattleCL: DWORD = 0x6AC540;
-pub const vtbl_CLoadingWatch: DWORD = 0x6ACE68;
-pub const vtbl_CBattleWatch: DWORD = 0x6AC55C;
-pub const vtbl_CBattleManager: DWORD = 0x6AD50C;
+pub const vtbl_CLogo: usize = 0x6AC6FC;
+pub const vtbl_Opening: usize = 0x6AC798;
+pub const vtbl_CLoading: usize = 0x6AC6AC;
+pub const vtbl_CTitle: usize = 0x6ACCF4;
+pub const vtbl_CSelect: usize = 0x6ACBCC;
+pub const vtbl_CSelectScenario: usize = 0x6ACC20;
+pub const vtbl_CBattle: usize = 0x6AC470;
+pub const vtbl_Ending: usize = 0x6AC5E8;
+pub const vtbl_CSelectSV: usize = 0x6AC4AC;
+pub const vtbl_CLoadingSV: usize = 0x6AC4CC;
+pub const vtbl_CBattleSV: usize = 0x6AC4E8;
+pub const vtbl_CSelectCL: usize = 0x6AC504;
+pub const vtbl_CLoadingCL: usize = 0x6AC524;
+pub const vtbl_CBattleCL: usize = 0x6AC540;
+pub const vtbl_CLoadingWatch: usize = 0x6ACE68;
+pub const vtbl_CBattleWatch: usize = 0x6AC55C;
+pub const vtbl_CBattleManager: usize = 0x6AD50C;
 
 // クラス構築関数caller
-pub const CLogo_Creater: DWORD = 0x41D827;
-pub const Opening_Creater: DWORD = 0x41D861;
-pub const CLoading_Creater: DWORD = 0x41D89B;
-pub const CTitle_Creater: DWORD = 0x41D8D5;
-pub const CSelect_Creater: DWORD = 0x41D90F;
-pub const CSelectScenario_Creater: DWORD = 0x41D949;
-pub const CBattle_Creater: DWORD = 0x41D980;
-pub const Ending_Creater: DWORD = 0x41D9BA;
-pub const CSelectSV_Creater: DWORD = 0x41D9F4;
-pub const CLoadingSV_Creater: DWORD = 0x41DA2E;
-pub const CBattleSV_Creater: DWORD = 0x41DA65;
-pub const CSelectCL_Creater: DWORD = 0x41DA9F;
-pub const CLoadingCL_Creater: DWORD = 0x41DAD9;
-pub const CBattleCL_Creater: DWORD = 0x41DB10;
-pub const CLoadingWatch_Creater: DWORD = 0x41DB46;
-pub const CBattleWatch_Creater: DWORD = 0x41DB79;
-pub const CBattleManager_Creater: DWORD = 0x437D90;
+pub const CLogo_Creater: usize = 0x41D827;
+pub const Opening_Creater: usize = 0x41D861;
+pub const CLoading_Creater: usize = 0x41D89B;
+pub const CTitle_Creater: usize = 0x41D8D5;
+pub const CSelect_Creater: usize = 0x41D90F;
+pub const CSelectScenario_Creater: usize = 0x41D949;
+pub const CBattle_Creater: usize = 0x41D980;
+pub const Ending_Creater: usize = 0x41D9BA;
+pub const CSelectSV_Creater: usize = 0x41D9F4;
+pub const CLoadingSV_Creater: usize = 0x41DA2E;
+pub const CBattleSV_Creater: usize = 0x41DA65;
+pub const CSelectCL_Creater: usize = 0x41DA9F;
+pub const CLoadingCL_Creater: usize = 0x41DAD9;
+pub const CBattleCL_Creater: usize = 0x41DB10;
+pub const CLoadingWatch_Creater: usize = 0x41DB46;
+pub const CBattleWatch_Creater: usize = 0x41DB79;
+pub const CBattleManager_Creater: usize = 0x437D90;
 
 // クラスサイズオペランド
 macro_rules! define_raw_ptr_value {

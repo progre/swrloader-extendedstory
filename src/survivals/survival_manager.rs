@@ -70,26 +70,20 @@ extern "fastcall" fn on_load_txt(obj: LPVOID, file_name: *const c_char) -> BOOL 
     d(&format!("read txt: {}", file_name_str));
 
     let re = Regex::new(r"data/scenario/(.+)/(\d+)\.txt").unwrap();
-    match re.captures(&file_name_str) {
-        Some(cap) => {
-            let csv = build_scenario_txt(&cap[1], cap[2].parse().unwrap());
-            unsafe {
-                *(obj as *mut u32) = create_text_object(&csv) as u32;
-            }
-            return TRUE;
+    if let Some(cap) = re.captures(&file_name_str) {
+        let csv = build_scenario_txt(&cap[1], cap[2].parse().unwrap());
+        unsafe {
+            *(obj as *mut u32) = create_text_object(&csv) as u32;
         }
-        None => {}
+        return TRUE;
     }
     let re = Regex::new(r"data/scenario/.+/ed\.txt").unwrap();
-    match re.captures(&file_name_str) {
-        Some(_) => {
-            let csv = build_ending_txt();
-            unsafe {
-                *(obj as *mut u32) = create_text_object(&csv) as u32;
-            }
-            return TRUE;
+    if re.captures(&file_name_str).is_some() {
+        let csv = build_ending_txt();
+        unsafe {
+            *(obj as *mut u32) = create_text_object(&csv) as u32;
         }
-        None => {}
+        return TRUE;
     }
 
     unsafe { load_txt(obj, file_name) }
@@ -133,9 +127,9 @@ impl SurvivalManager {
             VirtualProtect(text_Offset, text_Size, PAGE_EXECUTE_WRITECOPY, &mut old);
 
             self.tamperer_load_txt =
-                Some(Tamperer::near_jmp_operator(0x4059F3, on_load_txt as DWORD));
+                Some(Tamperer::near_jmp_operator(0x4059F3, on_load_txt as usize));
             self.tamperer_load_csv =
-                Some(Tamperer::near_jmp_operator(0x40EB63, on_load_csv as DWORD));
+                Some(Tamperer::near_jmp_operator(0x40EB63, on_load_csv as usize));
             self.tamperer_save_clear = Some(Tamperer::byte(0x42D62B, 0xEBu8));
             self.tamperer_add_cards = Some(Tamperer::bytes(0x43EA8C, &0x90E9u16.to_be_bytes())); // 獲得カードを無効化
             self.tamperer_save_result = Some(Tamperer::bytes(

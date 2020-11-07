@@ -23,13 +23,13 @@ struct SWRVERTEX {
 impl SWRVERTEX {
     fn new_2d(x: FLOAT, y: FLOAT, color: D3DCOLOR, u: FLOAT, v: FLOAT) -> Self {
         SWRVERTEX {
-            x: x,
-            y: y,
+            x,
+            y,
             z: 0.0f32,
             rhw: 1.0f32,
-            color: color,
-            u: u,
-            v: v,
+            color,
+            u,
+            v,
         }
     }
 }

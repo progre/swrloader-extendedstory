@@ -32,10 +32,10 @@ unsafe fn c_select_scenario_render(this: LPVOID) -> DWORD {
     )
 }
 
-static mut ORIGINAL_C_SELECT_SCENARIO_CREATE: DWORD = 0;
-static mut ORIGINAL_C_SELECT_SCENARIO_DESTRUCT: DWORD = 0;
-static mut ORIGINAL_C_SELECT_SCENARIO_UPDATE: DWORD = 0;
-static mut ORIGINAL_C_SELECT_SCENARIO_RENDER: DWORD = 0;
+static mut ORIGINAL_C_SELECT_SCENARIO_CREATE: usize = 0;
+static mut ORIGINAL_C_SELECT_SCENARIO_DESTRUCT: usize = 0;
+static mut ORIGINAL_C_SELECT_SCENARIO_UPDATE: usize = 0;
+static mut ORIGINAL_C_SELECT_SCENARIO_RENDER: usize = 0;
 static mut TEXTURE: Option<TextTexture> = None;
 
 extern "thiscall" fn c_select_scenario_on_create(this: LPVOID) -> LPVOID {
@@ -82,21 +82,19 @@ unsafe extern "thiscall" fn c_select_scenario_on_render(this: LPVOID) -> DWORD {
 pub unsafe fn tamper_text() {
     ORIGINAL_C_SELECT_SCENARIO_CREATE = TamperNearJmpOpr(
         CSelectScenario_Creater,
-        c_select_scenario_on_create as DWORD,
+        c_select_scenario_on_create as usize,
     );
 }
 
 pub unsafe fn tamper_r_data() {
-    ORIGINAL_C_SELECT_SCENARIO_DESTRUCT = TamperDword(
-        vtbl_CSelectScenario + 0x00,
-        c_select_scenario_on_destruct as DWORD,
-    );
+    ORIGINAL_C_SELECT_SCENARIO_DESTRUCT =
+        TamperDword(vtbl_CSelectScenario, c_select_scenario_on_destruct as usize);
     ORIGINAL_C_SELECT_SCENARIO_UPDATE = TamperDword(
         vtbl_CSelectScenario + 0x04,
-        c_select_scenario_on_update as DWORD,
+        c_select_scenario_on_update as usize,
     );
     ORIGINAL_C_SELECT_SCENARIO_RENDER = TamperDword(
         vtbl_CSelectScenario + 0x08,
-        c_select_scenario_on_render as DWORD,
+        c_select_scenario_on_render as usize,
     );
 }

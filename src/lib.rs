@@ -1,4 +1,5 @@
 #![feature(abi_thiscall)]
+#![warn(clippy::all)]
 
 mod debug;
 mod hook;
@@ -15,12 +16,12 @@ use winapi::um::winnt::DLL_PROCESS_ATTACH;
 
 #[no_mangle]
 pub extern "system" fn DllMain(module: HMODULE, reason: u32, _: u32) -> BOOL {
-    return if reason == DLL_PROCESS_ATTACH {
+    if reason == DLL_PROCESS_ATTACH {
         hook(module);
         TRUE
     } else {
         TRUE
-    };
+    }
 }
 
 #[cfg(test)]
