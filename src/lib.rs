@@ -5,6 +5,7 @@ mod hook;
 mod select_scenarios;
 mod survivals;
 mod swr;
+mod titles;
 
 use crate::hook::hook;
 use winapi::shared::minwindef::BOOL;

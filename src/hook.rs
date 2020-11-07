@@ -1,5 +1,6 @@
 use crate::select_scenarios::select_scenario;
 use crate::swr::*;
+use crate::titles::title;
 use winapi::shared::minwindef::DWORD;
 use winapi::shared::minwindef::HMODULE;
 use winapi::shared::ntdef::NULL;
@@ -12,6 +13,7 @@ pub fn hook(_module: HMODULE) {
     unsafe {
         let mut old: DWORD = 0;
         VirtualProtect(text_Offset, text_Size, PAGE_EXECUTE_WRITECOPY, &mut old);
+        title::tamper_text();
         select_scenario::tamper_text();
         VirtualProtect(text_Offset, text_Size, old, &mut old);
 
