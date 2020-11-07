@@ -2,6 +2,7 @@ use crate::debug::d;
 use crate::survivals::scenario_txt_builder::build_ending_txt;
 use crate::survivals::scenario_txt_builder::build_scenario_txt;
 use crate::survivals::story_csv_builder::build_story_csv;
+use crate::survivals::tamperer::Tamperer;
 use crate::swr::*;
 use crate::union_cast;
 use encoding_rs::SHIFT_JIS;
@@ -20,31 +21,32 @@ use winapi::um::processthreadsapi::GetCurrentProcess;
 use winapi::um::winnt::PAGE_EXECUTE_WRITECOPY;
 
 pub static mut SURVIVAL_MANAGER: SurvivalManager = SurvivalManager {
-    original_load_txt: 0,
-    original_load_csv: 0,
-    original_save_clear_operator: 0u8,
-    original_save_result_operators: None,
+    tamperer_load_txt: None,
+    tamperer_load_csv: None,
+    tamperer_save_clear: None,
+    tamperer_add_cards: None,
+    tamperer_save_result: None,
+    tamperer_save_replay_interrupted: None,
+    tamperer_save_replay_clear: None,
 };
-
-unsafe fn tamper_bytes(addr: u32, data: &[u8]) -> Vec<u8> {
-    let mut old = Vec::new();
-    for i in 0..data.len() {
-        let ptr = (addr + i as u32) as *mut u8;
-        old.push(*ptr);
-        *ptr = data[i];
-    }
-    old
-}
 
 unsafe fn load_txt(obj: LPVOID, file_name: *const c_char) -> BOOL {
     union_cast!(extern "fastcall" fn(obj: LPVOID, file_name: *const c_char) -> BOOL)(
-        SURVIVAL_MANAGER.original_load_txt,
+        SURVIVAL_MANAGER
+            .tamperer_load_txt
+            .as_ref()
+            .unwrap()
+            .jmp_target_addr(),
     )(obj, file_name)
 }
 
 unsafe fn load_csv(obj: LPVOID, file_name: *const c_char) -> BOOL {
     union_cast!(extern "fastcall" fn(obj: LPVOID, file_name: *const c_char) -> BOOL)(
-        SURVIVAL_MANAGER.original_load_csv,
+        SURVIVAL_MANAGER
+            .tamperer_load_csv
+            .as_ref()
+            .unwrap()
+            .jmp_target_addr(),
     )(obj, file_name)
 }
 
@@ -111,26 +113,38 @@ extern "fastcall" fn on_load_csv(obj: LPVOID, file_name: *const c_char) -> BOOL 
 }
 
 pub struct SurvivalManager {
-    original_load_txt: u32,
-    original_load_csv: u32,
-    original_save_clear_operator: u8,
-    original_save_result_operators: Option<Vec<u8>>,
+    tamperer_load_txt: Option<Tamperer>,
+    tamperer_load_csv: Option<Tamperer>,
+    tamperer_save_clear: Option<Tamperer>,
+    tamperer_add_cards: Option<Tamperer>,
+    tamperer_save_result: Option<Tamperer>,
+    tamperer_save_replay_interrupted: Option<Tamperer>,
+    tamperer_save_replay_clear: Option<Tamperer>,
 }
 
 impl SurvivalManager {
     pub fn is_active(&self) -> bool {
-        self.original_load_txt != 0
+        self.tamperer_load_txt.is_some()
     }
 
     pub fn tamper(&mut self) {
         let mut old: DWORD = 0;
         unsafe {
             VirtualProtect(text_Offset, text_Size, PAGE_EXECUTE_WRITECOPY, &mut old);
-            self.original_load_txt = TamperNearJmpOpr(0x4059F3, on_load_txt as DWORD);
-            self.original_load_csv = TamperNearJmpOpr(0x40EB63, on_load_csv as DWORD);
-            self.original_save_clear_operator = tamper_bytes(0x42D62B, &[0xEBu8])[0];
-            self.original_save_result_operators =
-                Some(tamper_bytes(0x43EB5B, &0x9090909090u64.to_be_bytes()[3..8])); // リザルト保存を抑止
+
+            self.tamperer_load_txt =
+                Some(Tamperer::near_jmp_operator(0x4059F3, on_load_txt as DWORD));
+            self.tamperer_load_csv =
+                Some(Tamperer::near_jmp_operator(0x40EB63, on_load_csv as DWORD));
+            self.tamperer_save_clear = Some(Tamperer::byte(0x42D62B, 0xEBu8));
+            self.tamperer_add_cards = Some(Tamperer::bytes(0x43EA8C, &0x90E9u16.to_be_bytes())); // 獲得カードを無効化
+            self.tamperer_save_result = Some(Tamperer::bytes(
+                0x43EB5B,
+                &0x9090909090u64.to_be_bytes()[3..8],
+            )); // リザルト保存を抑止
+            self.tamperer_save_replay_interrupted = Some(Tamperer::byte(0x43EE11, 0xEBu8)); // ストーリー中断リプレイ保存抑止
+            self.tamperer_save_replay_clear = Some(Tamperer::byte(0x4433DF, 0xEBu8)); // ストーリー完了リプレイ抑止
+
             VirtualProtect(text_Offset, text_Size, old, &mut old);
             FlushInstructionCache(GetCurrentProcess(), NULL, 0);
         }
@@ -140,20 +154,18 @@ impl SurvivalManager {
         let mut old: DWORD = 0;
         unsafe {
             VirtualProtect(text_Offset, text_Size, PAGE_EXECUTE_WRITECOPY, &mut old);
-            TamperNearJmpOpr(0x4059F3, self.original_load_txt);
-            TamperNearJmpOpr(0x40EB63, self.original_load_csv);
-            tamper_bytes(0x42D62B, &[self.original_save_clear_operator]);
-            tamper_bytes(
-                0x43EB5B,
-                self.original_save_result_operators.as_ref().unwrap(),
-            );
+
+            self.tamperer_load_txt = None;
+            self.tamperer_load_csv = None;
+            self.tamperer_save_clear = None;
+            self.tamperer_add_cards = None;
+            self.tamperer_save_result = None;
+            self.tamperer_save_replay_interrupted = None;
+            self.tamperer_save_replay_clear = None;
+
             VirtualProtect(text_Offset, text_Size, old, &mut old);
             FlushInstructionCache(GetCurrentProcess(), NULL, 0);
         }
-        self.original_load_txt = 0;
-        self.original_load_csv = 0;
-        self.original_save_clear_operator = 0;
-        self.original_save_result_operators = None;
     }
 }
 
