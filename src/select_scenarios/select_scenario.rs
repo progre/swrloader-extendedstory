@@ -3,33 +3,33 @@ use crate::select_scenarios::text_texture::TextTextureFactory;
 use crate::select_scenarios::texture_renderer::render_texture;
 use crate::survivals::survival_manager::SURVIVAL_MANAGER;
 use crate::swr::*;
-use crate::union_cast;
+use std::mem::transmute;
 use std::os::raw::c_void;
 use winapi::shared::minwindef::DWORD;
 use winapi::shared::minwindef::LPVOID;
 
 unsafe fn c_select_scenario_create(this: LPVOID) -> LPVOID {
-    union_cast!(extern "thiscall" fn(this: LPVOID) -> LPVOID)(ORIGINAL_C_SELECT_SCENARIO_CREATE)(
-        this,
-    )
+    let func: extern "thiscall" fn(this: LPVOID) -> LPVOID =
+        transmute(ORIGINAL_C_SELECT_SCENARIO_CREATE);
+    func(this)
 }
 
 unsafe fn c_select_scenario_destruct(this: LPVOID, dyn_: DWORD) -> LPVOID {
-    union_cast!(extern "thiscall" fn(this: LPVOID, dyn_: DWORD) -> LPVOID)(
-        ORIGINAL_C_SELECT_SCENARIO_DESTRUCT,
-    )(this, dyn_)
+    let func: extern "thiscall" fn(this: LPVOID, dyn_: DWORD) -> LPVOID =
+        transmute(ORIGINAL_C_SELECT_SCENARIO_DESTRUCT);
+    func(this, dyn_)
 }
 
 unsafe fn c_select_scenario_update(this: *const c_void) -> i32 {
-    union_cast!(extern "thiscall" fn(this: *const c_void) -> i32)(ORIGINAL_C_SELECT_SCENARIO_UPDATE)(
-        this,
-    )
+    let func: extern "thiscall" fn(this: *const c_void) -> i32 =
+        transmute(ORIGINAL_C_SELECT_SCENARIO_UPDATE);
+    func(this)
 }
 
 unsafe fn c_select_scenario_render(this: LPVOID) -> DWORD {
-    union_cast!(extern "thiscall" fn(this: LPVOID) -> DWORD)(ORIGINAL_C_SELECT_SCENARIO_RENDER)(
-        this,
-    )
+    let func: extern "thiscall" fn(this: LPVOID) -> DWORD =
+        transmute(ORIGINAL_C_SELECT_SCENARIO_RENDER);
+    func(this)
 }
 
 static mut ORIGINAL_C_SELECT_SCENARIO_CREATE: usize = 0;

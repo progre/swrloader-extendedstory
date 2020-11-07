@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
+use std::mem::transmute;
 use winapi::shared::basetsd::SIZE_T;
 use winapi::shared::d3d9::IDirect3DDevice9;
 use winapi::shared::minwindef::BOOL;
@@ -112,28 +113,12 @@ pub struct SWRFONTDESC {
 // template<>
 // struct static_assert<true> { typedef void* Type; };
 
-// union_cast
-#[macro_export]
-macro_rules! union_cast {
-    ($type: ty) => {{
-        #[repr(C)]
-        union TemporaryUnionType {
-            ptr: usize,
-            pub call: $type,
-        }
-
-        (|src: usize| -> $type {
-            let tmp = TemporaryUnionType { ptr: src };
-            return tmp.call;
-        })
-    }};
-}
-
 // thiscall
 #[macro_export]
 macro_rules! Ccall {
     ($addr: expr, $type: ty) => {{
-        union_cast!($type)($addr)
+        let func: $type = transmute($addr);
+        func
     }};
 }
 

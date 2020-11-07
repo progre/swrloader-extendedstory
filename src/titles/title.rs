@@ -1,10 +1,11 @@
 use crate::survivals::survival_manager::SURVIVAL_MANAGER;
 use crate::swr::*;
-use crate::union_cast;
+use std::mem::transmute;
 use winapi::shared::minwindef::LPVOID;
 
 unsafe fn c_title_create(this: LPVOID) -> LPVOID {
-    union_cast!(extern "thiscall" fn(this: LPVOID) -> LPVOID)(ORIGINAL_C_TITLE_CREATE)(this)
+    let func: extern "thiscall" fn(this: LPVOID) -> LPVOID = transmute(ORIGINAL_C_TITLE_CREATE);
+    func(this)
 }
 
 static mut ORIGINAL_C_TITLE_CREATE: usize = 0;

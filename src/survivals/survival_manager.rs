@@ -4,10 +4,10 @@ use crate::survivals::scenario_txt_builder::build_scenario_txt;
 use crate::survivals::story_csv_builder::build_story_csv;
 use crate::survivals::tamperer::Tamperer;
 use crate::swr::*;
-use crate::union_cast;
 use encoding_rs::SHIFT_JIS;
 use regex::Regex;
 use std::ffi::CStr;
+use std::mem::transmute;
 use std::os::raw::c_char;
 use std::os::raw::c_void;
 use winapi::shared::minwindef::BOOL;
@@ -31,27 +31,30 @@ pub static mut SURVIVAL_MANAGER: SurvivalManager = SurvivalManager {
 };
 
 unsafe fn load_txt(obj: LPVOID, file_name: *const c_char) -> BOOL {
-    union_cast!(extern "fastcall" fn(obj: LPVOID, file_name: *const c_char) -> BOOL)(
+    let func: extern "fastcall" fn(obj: LPVOID, file_name: *const c_char) -> BOOL = transmute(
         SURVIVAL_MANAGER
             .tamperer_load_txt
             .as_ref()
             .unwrap()
             .jmp_target_addr(),
-    )(obj, file_name)
+    );
+    func(obj, file_name)
 }
 
 unsafe fn load_csv(obj: LPVOID, file_name: *const c_char) -> BOOL {
-    union_cast!(extern "fastcall" fn(obj: LPVOID, file_name: *const c_char) -> BOOL)(
+    let func: extern "fastcall" fn(obj: LPVOID, file_name: *const c_char) -> BOOL = transmute(
         SURVIVAL_MANAGER
             .tamperer_load_csv
             .as_ref()
             .unwrap()
             .jmp_target_addr(),
-    )(obj, file_name)
+    );
+    func(obj, file_name)
 }
 
 unsafe fn new_text_object(text_size: DWORD) -> *mut c_void {
-    union_cast!(extern "cdecl" fn(text_size: DWORD) -> *mut c_void)(0x00664F9A)(text_size)
+    let func: extern "cdecl" fn(text_size: DWORD) -> *mut c_void = transmute(0x00664F9A);
+    func(text_size)
 }
 
 unsafe fn create_text_object(text: &str) -> *const c_void {
