@@ -25,8 +25,8 @@ impl SWRVERTEX {
         SWRVERTEX {
             x,
             y,
-            z: 0.0f32,
-            rhw: 1.0f32,
+            z: 0.0,
+            rhw: 1.0,
             color,
             u,
             v,
@@ -34,19 +34,19 @@ impl SWRVERTEX {
     }
 }
 
-pub unsafe fn render_texture(tex: &TextTexture) {
+pub unsafe fn render_texture(tex: &TextTexture, width: f32, height: f32) {
     if CRenderer_Begin(g_renderer) == TRUE {
         let vertices = [
-            SWRVERTEX::new_2d(0.0f32, 0.0f32, 0xffffffff, 0.0f32, 0.0f32),
-            SWRVERTEX::new_2d(250.0f32, 0.0f32, 0xffffffff, 1.0f32, 0.0f32),
-            SWRVERTEX::new_2d(250.0f32, 50.0f32, 0xffffffff, 1.0f32, 1.0f32),
-            SWRVERTEX::new_2d(0.0f32, 50.0f32, 0xffffffff, 0.0f32, 1.0f32),
+            SWRVERTEX::new_2d(0.0, 0.0, 0xffffffff, 0.0, 0.0),
+            SWRVERTEX::new_2d(width, 0.0, 0xffffffff, 1.0, 0.0),
+            SWRVERTEX::new_2d(width, height, 0xffffffff, 1.0, 1.0),
+            SWRVERTEX::new_2d(0.0, height, 0xffffffff, 0.0, 1.0),
         ];
         let vertices2 = [
-            SWRVERTEX::new_2d(0.0f32, 0.0f32, 0x60000000, 0.0f32, 0.0f32),
-            SWRVERTEX::new_2d(250.0f32, 0.0f32, 0x60000000, 1.0f32, 0.0f32),
-            SWRVERTEX::new_2d(250.0f32, 40.0f32, 0x60000000, 1.0f32, 1.0f32),
-            SWRVERTEX::new_2d(0.0f32, 40.0f32, 0x60000000, 0.0f32, 1.0f32),
+            SWRVERTEX::new_2d(0.0, 0.0, 0x60000000, 0.0, 0.0),
+            SWRVERTEX::new_2d(width, 0.0, 0x60000000, 1.0, 0.0),
+            SWRVERTEX::new_2d(width, height - 15.0, 0x60000000, 1.0, 1.0),
+            SWRVERTEX::new_2d(0.0, height - 15.0, 0x60000000, 0.0, 1.0),
         ];
 
         CTextureManager_SetTexture(g_textureMgr, NULL as DWORD, 0);

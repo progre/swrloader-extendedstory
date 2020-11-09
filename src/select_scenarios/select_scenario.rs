@@ -8,6 +8,14 @@ use std::os::raw::c_void;
 use winapi::shared::minwindef::DWORD;
 use winapi::shared::minwindef::LPVOID;
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+static mut ORIGINAL_C_SELECT_SCENARIO_CREATE: usize = 0;
+static mut ORIGINAL_C_SELECT_SCENARIO_DESTRUCT: usize = 0;
+static mut ORIGINAL_C_SELECT_SCENARIO_UPDATE: usize = 0;
+static mut ORIGINAL_C_SELECT_SCENARIO_RENDER: usize = 0;
+static mut TEXTURE: Option<TextTexture> = None;
+
 // 17: 宣言
 // 1a: 点 1b-1d 空振り 1e: 着地
 // 27: 選択
@@ -49,14 +57,9 @@ unsafe fn c_select_scenario_render(this: LPVOID) -> DWORD {
     func(this)
 }
 
-static mut ORIGINAL_C_SELECT_SCENARIO_CREATE: usize = 0;
-static mut ORIGINAL_C_SELECT_SCENARIO_DESTRUCT: usize = 0;
-static mut ORIGINAL_C_SELECT_SCENARIO_UPDATE: usize = 0;
-static mut ORIGINAL_C_SELECT_SCENARIO_RENDER: usize = 0;
-static mut TEXTURE: Option<TextTexture> = None;
-
 extern "thiscall" fn c_select_scenario_on_create(this: LPVOID) -> LPVOID {
-    let texture = TextTextureFactory::new().create_texture(250, 50, "Survival Mode");
+    let texture =
+        TextTextureFactory::new().create_texture(320, 50, &format!("Survival Mode v{}", VERSION));
     unsafe {
         TEXTURE = Some(texture);
         c_select_scenario_create(this)
@@ -94,7 +97,7 @@ unsafe extern "thiscall" fn c_select_scenario_on_render(this: LPVOID) -> DWORD {
     if !SURVIVAL_MANAGER.is_active() {
         return ret;
     }
-    render_texture(&TEXTURE.as_ref().unwrap());
+    render_texture(&TEXTURE.as_ref().unwrap(), 320.0, 50.0);
     ret
 }
 

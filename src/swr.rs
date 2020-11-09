@@ -9,7 +9,6 @@ use winapi::shared::minwindef::BYTE;
 use winapi::shared::minwindef::DWORD;
 use winapi::shared::minwindef::LPDWORD;
 use winapi::shared::minwindef::LPVOID;
-use winapi::shared::ntdef::LONG;
 use winapi::shared::ntdef::LPCSTR;
 
 // #ifndef SWR_H_INCLUDED
@@ -60,22 +59,19 @@ pub unsafe fn TamperNearJmpOpr(addr: usize, target: usize) -> usize {
 #[repr(C, packed(4))]
 pub struct SWRFONTDESC {
     pub FaceName: [u8; 0x100],
-    pub R1: BYTE,
-    pub R2: BYTE,
-    pub G1: BYTE,
-    pub G2: BYTE,
-    pub B1: BYTE,
-    pub B2: BYTE,
-    pub Height: LONG,
-    pub Weight: LONG,
-    pub Italic: BYTE,
-    pub Shadow: BYTE,
-    pub UseOffset: BYTE,
-    pub BufferSize: DWORD,
-    pub OffsetX: DWORD,
-    pub OffsetY: DWORD,
-    pub CharSpaceX: DWORD,
-    pub CharSpaceY: DWORD,
+    pub R: u16,
+    pub G: u16,
+    pub B: u16,
+    pub Height: u32,
+    pub Weight: u32,
+    pub Italic: u8,
+    pub Shadow: u8,
+    pub UseOffset: u8,
+    pub BufferSize: u32,
+    pub OffsetX: u32,
+    pub OffsetY: u32,
+    pub CharSpaceX: u32,
+    pub CharSpaceY: u32,
 }
 
 // // コンパクト文字列

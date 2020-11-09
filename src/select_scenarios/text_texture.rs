@@ -19,12 +19,9 @@ fn create_font_desc() -> SWRFONTDESC {
 
     SWRFONTDESC {
         FaceName: face_name,
-        R1: 0xFF,
-        R2: 0xA0,
-        G1: 0xFF,
-        G2: 0xA0,
-        B1: 0xFF,
-        B2: 0xFF,
+        R: 0xA0FF,
+        G: 0xA0FF,
+        B: 0xFFFF,
         Height: 0x20,
         Weight: 300,
         Italic: 0,
