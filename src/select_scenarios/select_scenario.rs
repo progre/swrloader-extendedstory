@@ -8,6 +8,23 @@ use std::os::raw::c_void;
 use winapi::shared::minwindef::DWORD;
 use winapi::shared::minwindef::LPVOID;
 
+// 17: 宣言
+// 1a: 点 1b-1d 空振り 1e: 着地
+// 27: 選択
+// 28: 決定
+// 29: キャンセル
+// 2c: 決着
+// 2d: チャージ
+// 30: 萃夢想オプション
+// 35: 宣言
+// 36: スキカ
+// 37: 霊撃
+// 39: ベル
+unsafe fn play_sound(idx: i32) {
+    let func: extern "C" fn(idx: i32) = transmute(0x439DC0);
+    func(idx)
+}
+
 unsafe fn c_select_scenario_create(this: LPVOID) -> LPVOID {
     let func: extern "thiscall" fn(this: LPVOID) -> LPVOID =
         transmute(ORIGINAL_C_SELECT_SCENARIO_CREATE);
@@ -61,8 +78,10 @@ extern "thiscall" fn c_select_scenario_on_update(this: *const c_void) -> i32 {
         unsafe {
             if !SURVIVAL_MANAGER.is_active() {
                 SURVIVAL_MANAGER.tamper();
+                play_sound(0x30);
             } else {
                 SURVIVAL_MANAGER.restore();
+                play_sound(0x29);
             }
         }
     }
