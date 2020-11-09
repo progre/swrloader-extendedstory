@@ -72,7 +72,8 @@ extern "fastcall" fn on_load_txt(obj: LPVOID, file_name: *const c_char) -> BOOL 
     let file_name_str = SHIFT_JIS.decode(cstr.to_bytes()).0;
     d(&format!("read txt: {}", file_name_str));
 
-    let re = Regex::new(r"data/scenario/(.+)/(\d+)\.txt").unwrap();
+    // NOTE: /\d/ の使用には unicode-perl feature が必要
+    let re = Regex::new(r"data/scenario/(.+)/([0-9]+)\.txt").unwrap();
     if let Some(cap) = re.captures(&file_name_str) {
         let csv = build_scenario_txt(&cap[1], cap[2].parse().unwrap());
         unsafe {
